@@ -9,28 +9,32 @@
 
 #include <Arduino.h>
 #include <AsyncDelay.h>
+#include <string.h>
+
 #include <Encoder.h>
 #include <Motor.h>
-#include <string.h>
+#include <Communication.h>
 
 //* Interrupt Flag for reading encoders 
 volatile bool interrupted = false;
 
 //* Encoder Pins 
-#define ENCODER_LA 2
-#define ENCODER_LB 7
+#define ENCODER_LA 2 // Interrupt
+#define ENCODER_LB 4
+#define ENCODER_RA 3 // Interrupt
+#define ENCODER_RB 5 
 Encoder encoderL = Encoder(ENCODER_LA, ENCODER_LB);
-// #define encRA 4
-// #define encRB 5 
-// Encoder encoderR = Encoder(encRA, encRB);
+Encoder encoderR = Encoder(ENCODER_RA, ENCODER_RB);
 
 //* Motor Pins 
-#define MOTOR_IN1L 4
-#define MOTOR_IN2L 5
-#define MOTOR_ENL 6
+#define MOTOR_IN1L 8
+#define MOTOR_IN2L 7
+#define MOTOR_ENL 6 // PMW
+#define MOTOR_IN1R 13
+#define MOTOR_IN2R 12
+#define MOTOR_ENR 11// PMW
 Motor motorL = Motor(MOTOR_IN1L, MOTOR_IN2L, MOTOR_ENL);
-// #define IN2L 
-// #define IN2R 
+Motor motorR = Motor(MOTOR_IN1R, MOTOR_IN2R, MOTOR_ENR);
 
 
 AsyncDelay delay_2s;
@@ -48,21 +52,26 @@ int process_number = 0;
 
 //* Encoders
 void sendSerialData_encoders(Encoder *);
-void updateEncoder();
+void interrupt_system();
+
+//* Communication Interface
+Communication commIntrface = Communication();
 
 //! Arduino Code
 void setup() {
-  //* Begining Serial Communication over COM with Master (PC or Jetson)
-  Serial.begin(9600);
-  Serial.println("== START ==");
+  //* Begining Serial Communication with Master (RaspberryPi)
+  commIntrface.setup();
 
   //* Encoder Setup
   encoderL.setup();
+  encoderR.setup();
   // ENCA pin of each encoder is placed on an interrupt pin 
-  attachInterrupt(digitalPinToInterrupt(encoderL.GetInterruptPin()), updateEncoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(encoderL.GetInterruptPin()), interrupt_system, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(encoderR.GetInterruptPin()), interrupt_system, CHANGE);
 
   //* Motor Pinmodes 
   motorL.setup();
+  motorR.setup();
 
   //* Async Process Delay Start
   delay_2s.start(2000, AsyncDelay::units_t::MILLIS);
@@ -75,14 +84,16 @@ void loop() {
     process_number++;
     process_number = process_number % 4;
   }
-
-  sendSerialData_encoders(&encoderL);
+  if (!interrupted) {
+    commIntrface.read();
+  }
 }
 
 //! Function Definitions
 void move_forward() {
   Serial.println("== forward == ");
   motorL.set_state(255, RotationDirection::CW);
+  motorR.set_state(255, RotationDirection::CW);
 }
 
 void stop() {
@@ -90,11 +101,15 @@ void stop() {
   digitalWrite(MOTOR_ENL, 0);
   digitalWrite(MOTOR_IN1L, LOW);
   digitalWrite(MOTOR_IN2L, LOW);
+  digitalWrite(MOTOR_ENR, 0);
+  digitalWrite(MOTOR_IN1R, LOW);
+  digitalWrite(MOTOR_IN2R, LOW);
 }
 
 void move_backward() {
   Serial.println("== backward == ");
   motorL.set_state(255, RotationDirection::CCW);
+  motorR.set_state(255, RotationDirection::CCW);
 }
 
 bool set_process(void(*foo)()) {
@@ -105,35 +120,11 @@ bool set_process(void(*foo)()) {
   return true;
 }
 
-void sendSerialData_encoders(Encoder *encoder) {
-  if (interrupted) {
-    char message[25] = "$";
-    char buffer[25];
-    //* Encoder Pin State
-    //strcat(message, itoa(encA, buffer, 10));
-    //strcat(message, " ");
-    //strcat(message, itoa(encB, buffer, 10));
-    //strcat(message, ";");
-    //* Motor Count
-    strcat(message, itoa(encoder->GetAngle(), buffer, 10));
-    strcat(message, ";");
-    Serial.println(message);
-    Serial.println("");
-    interrupted = false;
-  }
-}
 
-void updateEncoder() {
-  // encA = (PIND & (1 << ENCODER_LA));
-  // encB = (PIND & (1 << ENCODER_LB));
+void interrupt_system() {
   encoderL.update();
+  encoderR.update();
+  commIntrface.update();
+  // commIntrface.plotData(encoderL.GetAngle());
   interrupted = true;
-  // if (encA == encB) {
-  //   //* Forward Movement / Add Position
-  //   encoderLCount++;
-  // }
-  // else {
-  //   //* Backward Movement / Subtract Position
-  //   encoderLCount--;
-  // }
 }
