@@ -1,6 +1,15 @@
 #ifndef MOTOR_LIB
 #define MOTOR_LIB
+
 #include <Encoder.h>
+
+typedef enum MovementDirection {
+    MOVE_Forward, MOVE_Reverse
+} MovementDirection;
+
+typedef enum Side {
+    SIDE_Left, SIDE_Right
+} Side;
 
 class Motor
 {
@@ -15,6 +24,8 @@ public:
 
     void setup();
     void set_state(int, RotationDirection);
+    void set_state(int, MovementDirection, Side);
+    void stop();
 };
 
 #endif

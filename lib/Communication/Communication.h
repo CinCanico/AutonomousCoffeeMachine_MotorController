@@ -1,7 +1,14 @@
+#ifndef COMMUNICATION_LIB
+#define COMMUNICATION_LIB
+
+#include <comm_commands.h>
+
 class Communication
 {
 private:
-
+    DirectionCommands m_currentCommand;
+    // Read serial functions
+    void read();
 public:
     Communication();
     ~Communication();
@@ -9,8 +16,8 @@ public:
     void setup();
     void update();
 
-    // Read serial functions
-    void read();
+    DirectionCommands GetCurrentCommand();
+
 
     // Plot Functions
     void plotData(int);
@@ -18,3 +25,4 @@ public:
     void plotData(double);
 };
 
+#endif

@@ -7,7 +7,7 @@ Encoder::Encoder(uint8_t aPin, uint8_t bPin) {
     m_PINB = bPin;
     m_ENCA = 0;
     m_ENCB = 0;
-    m_dir = RotationDirection::CW;
+    m_dir = RotationDirection::ROTATION_CW;
     m_angle = 0;
     m_count = 0;
     m_previousCount = 0;
@@ -26,12 +26,12 @@ void Encoder::update() {
 
     if (m_ENCA == m_ENCB) {
         m_count++;
-        m_dir = RotationDirection::CW;
+        m_dir = RotationDirection::ROTATION_CW;
         m_angle += 1.0 * 360.0 / CPR;
     }
     else {
         m_count--;
-        m_dir = RotationDirection::CCW;
+        m_dir = RotationDirection::ROTATION_CCW;
         m_angle -= 1.0 * 360.0 / CPR;
     }
 

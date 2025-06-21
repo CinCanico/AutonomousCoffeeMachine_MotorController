@@ -15,20 +15,42 @@ void Motor::setup() {
     pinMode(m_PININ2, OUTPUT);
     pinMode(m_PINEN, OUTPUT);
 }
+
+
+
 void Motor::set_state(int speed, RotationDirection dir) {
     switch (dir) {
-    case RotationDirection::CW:
+    case RotationDirection::ROTATION_CW:
         analogWrite(m_PINEN, speed);
         digitalWrite(m_PININ1, HIGH);
         digitalWrite(m_PININ2, LOW);
         break;
-    case RotationDirection::CCW:
+    case RotationDirection::ROTATION_CCW:
         analogWrite(m_PINEN, speed);
         digitalWrite(m_PININ1, LOW);
         digitalWrite(m_PININ2, HIGH);
     default:
         break;
     }
+}
 
+void Motor::set_state(int speed, MovementDirection dir, Side side) {
+    RotationDirection _rotDir;
 
+    if (dir == MovementDirection::MOVE_Forward) {
+        if (side == Side::SIDE_Left) _rotDir = ROTATION_CCW;
+        else _rotDir = ROTATION_CW;
+    }
+    else {
+        if (side == Side::SIDE_Left) _rotDir = ROTATION_CW;
+        else _rotDir = ROTATION_CCW;
+    }
+
+    this->set_state(speed, _rotDir);
+}
+
+void Motor::stop() {
+    digitalWrite(m_PINEN, LOW);
+    digitalWrite(m_PININ1, LOW);
+    digitalWrite(m_PININ2, LOW);
 }

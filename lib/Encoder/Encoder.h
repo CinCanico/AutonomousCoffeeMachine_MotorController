@@ -2,8 +2,10 @@
 #define ENCODER_LIB
 
 enum RotationDirection {
-    CW, CCW
+    ROTATION_CW, ROTATION_CCW
 };
+
+
 
 class Encoder
 {
