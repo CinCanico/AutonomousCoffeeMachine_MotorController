@@ -1,8 +1,8 @@
 /**
  * @file main.cpp
  * @author CinCanico
- * @brief Serial control middleware between RaspberryPi and "Mobile Autonomous Coffe Machine" electrical system.
- * @version 0.2
+ * @brief Serial control middleware between RaspberryPi and "Mobile Autonomous Coffee Machine" electrical system.
+ * @version 0.3
 */
 
 //! Preprocessing
@@ -27,12 +27,12 @@ Encoder encoderL = Encoder(ENCODER_LA, ENCODER_LB);
 Encoder encoderR = Encoder(ENCODER_RA, ENCODER_RB);
 
 //* Motor Pins 
-#define MOTOR_IN1L 9
-#define MOTOR_IN2L 8
-#define MOTOR_ENL 10 // PMW
-#define MOTOR_IN1R 13
-#define MOTOR_IN2R 12
-#define MOTOR_ENR 11// PMW
+#define MOTOR_IN1L  8
+#define MOTOR_IN2L  9
+#define MOTOR_ENL   10 // PMW
+#define MOTOR_IN1R  12
+#define MOTOR_IN2R  13
+#define MOTOR_ENR   11// PMW
 Motor motorL = Motor(MOTOR_IN1L, MOTOR_IN2L, MOTOR_ENL);
 Motor motorR = Motor(MOTOR_IN1R, MOTOR_IN2R, MOTOR_ENR);
 
@@ -78,6 +78,9 @@ void setup() {
   motorL.setup();
   motorR.setup();
 
+  delay(100);
+  move_stop();
+
   //* Async Process Delay Start
   delay_2s.start(2000, AsyncDelay::units_t::MILLIS);
   // delay_10ms.start(10, AsyncDelay::units_t::MILLIS);
@@ -90,40 +93,42 @@ void loop() {
   commIntrface.update();
   DirectionCommands comNow = commIntrface.GetCurrentCommand();
 
-  if (comNow == lastCommand) return;
+  if (comNow != lastCommand) {
+    lastCommand = comNow;
 
-  switch (comNow) {
-  case COM_ForwardLeft:
-    move_forwardleft();
-    break;
-  case COM_ForwardRight:
-    move_forwardright();
-    break;
-  case COM_Forward:
-    move_forward();
-    break;
-  case COM_BackwardLeft:
-    move_backwardleft();
-    break;
-  case COM_BackwardRight:
-    move_backwardright();
-    break;
-  case COM_Backward:
-    move_backward();
-    break;
-  case COM_Left:
-    move_left();
-    break;
-  case COM_Right:
-    move_right();
-    break;
-  case COM_Stop:
-    move_stop();
-    break;
-  default:
-    break;
+    switch (comNow) {
+    case COM_ForwardLeft:
+      move_forwardleft();
+      break;
+    case COM_ForwardRight:
+      move_forwardright();
+      break;
+    case COM_Forward:
+      move_forward();
+      break;
+    case COM_BackwardLeft:
+      move_backwardleft();
+      break;
+    case COM_BackwardRight:
+      move_backwardright();
+      break;
+    case COM_Backward:
+      move_backward();
+      break;
+    case COM_Left:
+      move_left();
+      break;
+    case COM_Right:
+      move_right();
+      break;
+    case COM_Stop:
+      move_stop();
+      break;
+    default:
+      break;
+    }
   }
-  lastCommand = comNow;
+
 }
 
 void interrupt_system() {
@@ -138,28 +143,28 @@ void interrupt_system() {
 //* Forward
 void move_forwardleft() {
   Serial.println("== forward left == ");
-  motorL.set_state(150, MovementDirection::MOVE_Forward, Side::SIDE_Left);
+  motorL.set_state(200, MovementDirection::MOVE_Forward, Side::SIDE_Left);
   motorR.set_state(255, MovementDirection::MOVE_Forward, Side::SIDE_Right);
 }
 
 
 void move_forward() {
   Serial.println("== forward == ");
-  motorL.set_state(255, RotationDirection::ROTATION_CW);
-  motorR.set_state(255, RotationDirection::ROTATION_CW);
+  motorL.set_state(255, MovementDirection::MOVE_Forward, Side::SIDE_Left);
+  motorR.set_state(255, MovementDirection::MOVE_Forward, Side::SIDE_Right);
 }
 
 void move_forwardright() {
   Serial.println("== forward right == ");
   motorL.set_state(255, MovementDirection::MOVE_Forward, Side::SIDE_Left);
-  motorR.set_state(150, MovementDirection::MOVE_Forward, Side::SIDE_Right);
+  motorR.set_state(200, MovementDirection::MOVE_Forward, Side::SIDE_Right);
 }
 
 //* In Place
 void move_left() {
   Serial.println("== full left == ");
   motorL.stop();
-  motorR.set_state(255, MOVE_Forward, SIDE_Right);
+  motorR.set_state(255, MovementDirection::MOVE_Forward, Side::SIDE_Right);
 }
 void move_stop() {
   Serial.println("== stop == ");
@@ -168,26 +173,26 @@ void move_stop() {
 }
 void move_right() {
   Serial.println("== full right == ");
-  motorL.set_state(255, MOVE_Forward, SIDE_Right);
+  motorL.set_state(255, MovementDirection::MOVE_Forward, Side::SIDE_Left);
   motorR.stop();
 }
 
 //* Backward
 void move_backwardleft() {
   Serial.println("== backward left== ");
-  motorL.set_state(150, RotationDirection::ROTATION_CCW);
-  motorR.set_state(255, RotationDirection::ROTATION_CCW);
+  motorL.set_state(200, MovementDirection::MOVE_Reverse, Side::SIDE_Left);
+  motorR.set_state(255, MovementDirection::MOVE_Reverse, Side::SIDE_Right);
 }
 
 void move_backward() {
   Serial.println("== backward == ");
-  motorL.set_state(255, RotationDirection::ROTATION_CCW);
-  motorR.set_state(255, RotationDirection::ROTATION_CCW);
+  motorL.set_state(255, MovementDirection::MOVE_Reverse, Side::SIDE_Left);
+  motorR.set_state(255, MovementDirection::MOVE_Reverse, Side::SIDE_Right);
 }
 void move_backwardright() {
   Serial.println("== backward right== ");
-  motorL.set_state(255, RotationDirection::ROTATION_CCW);
-  motorR.set_state(150, RotationDirection::ROTATION_CCW);
+  motorL.set_state(255, MovementDirection::MOVE_Reverse, Side::SIDE_Left);
+  motorR.set_state(200, MovementDirection::MOVE_Reverse, Side::SIDE_Right);
 }
 
 

@@ -50,7 +50,7 @@ void Motor::set_state(int speed, MovementDirection dir, Side side) {
 }
 
 void Motor::stop() {
-    digitalWrite(m_PINEN, LOW);
-    digitalWrite(m_PININ1, LOW);
-    digitalWrite(m_PININ2, LOW);
+    analogWrite(m_PINEN, 0);
+    digitalWrite(m_PININ1, HIGH);
+    digitalWrite(m_PININ2, HIGH);
 }

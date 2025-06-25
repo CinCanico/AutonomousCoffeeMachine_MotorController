@@ -1,4 +1,5 @@
 #include "comm_commands.h"
+#include <Arduino.h>
 
 
 DirectionCommands KeyboardConversion(char *_single_byte, DirectionCommands last) {
@@ -31,7 +32,7 @@ DirectionCommands KeyboardConversion(char *_single_byte, DirectionCommands last)
         return DirectionCommands::COM_BackwardRight;
         break;
     default:
+        return last;
         break;
     }
-    return last;
 }
